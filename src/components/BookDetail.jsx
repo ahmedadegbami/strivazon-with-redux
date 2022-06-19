@@ -1,16 +1,28 @@
 import { Component } from "react";
 import { Col, Row } from "react-bootstrap";
 import Button from "react-bootstrap/Button";
+import { connect } from "react-redux";
+import { addToCartAction } from "../redux/actions";
+
+const mapStateToProps = (state) => ({
+  username: state.user.name
+});
+
+const mapDispatchToProps = (dispatch) => ({
+  addToCard: (newBook) => {
+    dispatch(addToCartAction(newBook));
+  }
+});
 
 class BookDetail extends Component {
   state = {
-    book: null,
+    book: null
   };
 
   componentDidUpdate(prevProps) {
     if (prevProps.bookSelected !== this.props.bookSelected) {
       this.setState({
-        book: this.props.bookSelected,
+        book: this.props.bookSelected
       });
     }
   }
@@ -44,9 +56,18 @@ class BookDetail extends Component {
                   <span className="font-weight-bold">Price:</span>
                   {this.state.book.price}
                 </p>
-                <Button color="primary" onClick={() => {}}>
-                  ADD TO CART
-                </Button>
+                {this.props.username ? (
+                  <Button
+                    color="primary"
+                    onClick={() => {
+                      this.props.addToCard(this.state.book);
+                    }}
+                  >
+                    ADD TO CART
+                  </Button>
+                ) : (
+                  <div> Log in to add book to cart!</div>
+                )}
               </Col>
             </Row>
           </>
@@ -62,4 +83,4 @@ class BookDetail extends Component {
   }
 }
 
-export default BookDetail;
+export default connect(mapStateToProps, mapDispatchToProps)(BookDetail);
