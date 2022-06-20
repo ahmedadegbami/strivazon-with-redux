@@ -1,28 +1,30 @@
 import { Component } from "react";
 import BookList from "./BookList";
 import BookDetail from "./BookDetail";
-import { Col, Row } from "react-bootstrap";
+import { Col, Row, Spinner, Alert } from "react-bootstrap";
+import { connect } from "react-redux";
+import { getBooksAction } from "../redux/actions";
+
+const mapStateToProps = (state) => ({
+  booksFromRedux: state.book.stock,
+  areBooksLoading: state.book.isLoading,
+  errorInFetching: state.book.isError
+});
+
+const mapDispatchToProps = (dispatch) => ({
+  getBooks: () => {
+    dispatch(getBooksAction());
+  }
+});
 
 class BookStore extends Component {
   state = {
-    books: [],
-    bookSelected: null,
+    // books: [],
+    bookSelected: null
   };
 
   componentDidMount = async () => {
-    try {
-      let resp = await fetch(
-        "https://striveschool-api.herokuapp.com/food-books"
-      );
-      if (resp.ok) {
-        let books = await resp.json();
-        this.setState({ books });
-      } else {
-        console.log("error");
-      }
-    } catch (error) {
-      console.log(error);
-    }
+    await this.props.getBooks();
   };
 
   changeBook = (book) => this.setState({ bookSelected: book });
@@ -31,20 +33,26 @@ class BookStore extends Component {
     return (
       <Row>
         <Col md={4}>
-          <BookList
-            bookSelected={this.state.bookSelected}
-            changeBook={this.changeBook}
-            books={this.state.books}
-          />
+          {this.props.areBooksLoading ? (
+            <div className="text-center">
+              <Spinner variant="primary" animation="border" />
+            </div>
+          ) : this.props.errorInFetching ? (
+            <Alert variant="danger">Errol!!</Alert>
+          ) : (
+            <BookList
+              bookSelected={this.state.bookSelected}
+              changeBook={this.changeBook}
+              books={this.props.booksFromRedux}
+            />
+          )}
         </Col>
         <Col md={8}>
-          <BookDetail
-            bookSelected={this.state.bookSelected}
-          />
+          <BookDetail bookSelected={this.state.bookSelected} />
         </Col>
       </Row>
     );
   }
 }
 
-export default BookStore;
+export default connect(mapStateToProps, mapDispatchToProps)(BookStore);
